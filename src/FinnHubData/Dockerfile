@@ -1,24 +1,25 @@
-# Use official .NET SDK image for building the project
+# Use .NET SDK for building the project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy project files and restore dependencies
-COPY ../*.sln .  # Adjusted to go one level up if necessary
-COPY ./*.csproj ./
+# Copy only the project file to restore dependencies
+COPY ["FinnHubData.API.csproj", "./"]
+
+# Restore dependencies
 RUN dotnet restore
 
-# Copy the entire project and build
-COPY . ./
-RUN dotnet publish -c Release -o /publish
+# Copy everything and build
+COPY . .  
+RUN dotnet publish -c Release -o /publish  
 
-# Use ASP.NET Core runtime
+# Use the ASP.NET Core runtime for execution
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /publish .
 
-# Expose port 8080 (Render runs containers on 8080)
+# Expose port 8080 (Render requires this)
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
-# Start the app
+# Start the application
 ENTRYPOINT ["dotnet", "FinnHubData.API.dll"]
